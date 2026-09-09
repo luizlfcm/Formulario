@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Lock } from 'lucide-react'
 
 export default function PainelLogin() {
   const [senha, setSenha] = useState('')
@@ -34,11 +35,12 @@ export default function PainelLogin() {
     <main
       style={{
         minHeight: '100vh',
-        background: '#F6F3FB',
+        background: '#120B1F',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         fontFamily: "'Inter', -apple-system, sans-serif",
+        padding: '16px',
       }}
     >
       <form
@@ -46,23 +48,30 @@ export default function PainelLogin() {
         style={{
           width: '100%',
           maxWidth: '340px',
-          background: '#fff',
-          borderRadius: '14px',
-          padding: '32px',
-          boxShadow: '0 4px 24px rgba(124, 58, 237, 0.08)',
-          border: '1px solid #EEE9F7',
+          background: '#1B1330',
+          borderRadius: '16px',
+          padding: '36px 32px',
+          border: '1px solid #2E2147',
           display: 'flex',
           flexDirection: 'column',
-          gap: '16px',
+          gap: '18px',
         }}
       >
-        <img src="/logo.svg" alt="Élite Digital Pages" style={{ height: '32px', margin: '0 auto 4px' }} />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }}>
+          <img src="/logo.svg" alt="Élite Digital Pages" style={{ height: '30px', filter: 'brightness(0) invert(1)' }} />
+          <div
+            style={{
+              width: '44px', height: '44px', borderRadius: '12px',
+              background: 'linear-gradient(135deg, #7C3AED 0%, #DB2777 55%, #F59E0B 100%)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+          >
+            <Lock size={20} color="#fff" />
+          </div>
+        </div>
         <h1
           style={{
-            fontSize: '17px',
-            fontWeight: 700,
-            margin: 0,
-            textAlign: 'center',
+            fontSize: '16px', fontWeight: 700, margin: 0, textAlign: 'center', color: '#F5F2FF',
             fontFamily: "'Space Grotesk', sans-serif",
           }}
         >
@@ -75,13 +84,15 @@ export default function PainelLogin() {
           onChange={(e) => setSenha(e.target.value)}
           autoFocus
           style={{
-            padding: '11px 13px',
-            border: '1.5px solid #E4DEF0',
+            padding: '12px 14px',
+            border: '1px solid #2E2147',
+            background: '#120B1F',
+            color: '#F5F2FF',
             borderRadius: '8px',
             fontSize: '14px',
           }}
         />
-        {erro && <p style={{ color: '#C0243B', fontSize: '13px', margin: 0 }}>{erro}</p>}
+        {erro && <p style={{ color: '#FB7185', fontSize: '13px', margin: 0, textAlign: 'center' }}>{erro}</p>}
         <button
           type="submit"
           disabled={carregando}
