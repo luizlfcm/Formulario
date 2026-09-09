@@ -1,0 +1,20 @@
+<svg width="260" height="56" viewBox="0 0 260 56" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="edp-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7C3AED"/>
+      <stop offset="55%" stop-color="#DB2777"/>
+      <stop offset="100%" stop-color="#F59E0B"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Marca: gema facetada representando "elite" -->
+  <g>
+    <polygon points="22,4 40,24 22,52 4,24" fill="url(#edp-grad)"/>
+    <polygon points="22,4 40,24 22,24" fill="#ffffff" opacity="0.28"/>
+    <polygon points="4,24 22,24 22,52" fill="#000000" opacity="0.18"/>
+    <polygon points="22,4 22,24 4,24" fill="#ffffff" opacity="0.12"/>
+  </g>
+
+  <text x="54" y="26" font-family="'Space Grotesk', 'Segoe UI', sans-serif" font-size="19" font-weight="700" fill="#14101F">Élite Digital</text>
+  <text x="54" y="46" font-family="'Space Grotesk', 'Segoe UI', sans-serif" font-size="19" font-weight="700" fill="url(#edp-grad)">Pages</text>
+</svg>
