@@ -198,7 +198,7 @@ export default function FormularioBriefing() {
         {step === 2 && (
           <Bloco titulo="Prova e credibilidade">
             <Campo label="Você tem depoimentos reais de alunos/clientes?">
-              <SimNao valor={r.tem_depoimentos} onChange={(v) => set('tem_depoimentos', v)} />
+              <SimNao nome="tem_depoimentos" valor={r.tem_depoimentos} onChange={(v) => set('tem_depoimentos', v)} />
             </Campo>
             {r.tem_depoimentos === 'sim' && (
               <Aviso>
@@ -228,7 +228,7 @@ export default function FormularioBriefing() {
                 onChange={(e) => set('garantia', e.target.value)} />
             </Campo>
             <Campo label="Tem escassez real (vagas limitadas, prazo)?">
-              <SimNao valor={r.tem_escassez} onChange={(v) => set('tem_escassez', v)} />
+              <SimNao nome="tem_escassez" valor={r.tem_escassez} onChange={(v) => set('tem_escassez', v)} />
             </Campo>
             {r.tem_escassez === 'sim' && (
               <Campo label="Descreva">
@@ -242,7 +242,7 @@ export default function FormularioBriefing() {
         {step === 4 && (
           <Bloco titulo="Hospedagem">
             <Campo label="Você já tem hospedagem/domínio próprio?">
-              <SimNao valor={r.tem_hospedagem} onChange={(v) => set('tem_hospedagem', v)} />
+              <SimNao nome="tem_hospedagem" valor={r.tem_hospedagem} onChange={(v) => set('tem_hospedagem', v)} />
             </Campo>
             {r.tem_hospedagem === 'sim' && (
               <Campo label="Cole aqui o login e senha de acesso à sua hospedagem/domínio para subirmos a página">
@@ -257,7 +257,7 @@ export default function FormularioBriefing() {
             )}
             {r.tem_hospedagem === 'não' && (
               <Campo label="Deseja contratar a hospedagem mensal (com suporte e revisões inclusas)?">
-                <SimNao valor={r.quer_contratar_hospedagem} onChange={(v) => set('quer_contratar_hospedagem', v)} />
+                <SimNao nome="quer_contratar_hospedagem" valor={r.quer_contratar_hospedagem} onChange={(v) => set('quer_contratar_hospedagem', v)} />
               </Campo>
             )}
           </Bloco>
@@ -266,7 +266,7 @@ export default function FormularioBriefing() {
         {step === 5 && (
           <Bloco titulo="Pixel">
             <Campo label="Você já tem Pixel configurado (Meta/TikTok/Google)?">
-              <SimNao valor={r.tem_pixel} onChange={(v) => set('tem_pixel', v)} />
+              <SimNao nome="tem_pixel" valor={r.tem_pixel} onChange={(v) => set('tem_pixel', v)} />
             </Campo>
             {r.tem_pixel === 'sim' && (
               <Campo label="Informe qual(is) e o ID/código de cada um">
@@ -318,10 +318,10 @@ export default function FormularioBriefing() {
                 onChange={(v) => set('estilo_layout', v)} />
             </Campo>
             <Campo label="Quer contagem regressiva/escassez visual na página?">
-              <SimNao valor={r.quer_contagem_regressiva} onChange={(v) => set('quer_contagem_regressiva', v)} />
+              <SimNao nome="quer_contagem_regressiva" valor={r.quer_contagem_regressiva} onChange={(v) => set('quer_contagem_regressiva', v)} />
             </Campo>
             <Campo label="Quer seção de perguntas frequentes (FAQ)?">
-              <SimNao valor={r.quer_faq} onChange={(v) => set('quer_faq', v)} />
+              <SimNao nome="quer_faq" valor={r.quer_faq} onChange={(v) => set('quer_faq', v)} />
             </Campo>
           </Bloco>
         )}
@@ -417,8 +417,8 @@ function Campo({ label, required, children }: { label: string; required?: boolea
   )
 }
 
-function SimNao({ valor, onChange }: { valor: string; onChange: (v: string) => void }) {
-  return <Radios nome="simnao" valor={valor} opcoes={['sim', 'não']} onChange={onChange} />
+function SimNao({ nome, valor, onChange }: { nome: string; valor: string; onChange: (v: string) => void }) {
+  return <Radios nome={nome} valor={valor} opcoes={['sim', 'não']} onChange={onChange} />
 }
 
 function Radios({ nome, valor, opcoes, onChange }: { nome: string; valor: string; opcoes: string[]; onChange: (v: string) => void }) {
