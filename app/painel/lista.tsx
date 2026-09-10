@@ -4,22 +4,31 @@ import { useMemo, useState } from 'react'
 import {
   Users, Package, ShieldCheck, Tag, Server, Target, Pen, Palette,
   Flag, Search, Calendar, TrendingUp, Copy, Check, ChevronDown, Sparkles,
+  Globe, Save,
 } from 'lucide-react'
 
 type Briefing = Record<string, any>
 
+const STATUS_CONFIG: Record<string, { label: string; cor: string; bg: string }> = {
+  pendente: { label: 'Pendente', cor: '#F59E0B', bg: 'rgba(245,158,11,0.14)' },
+  em_execucao: { label: 'Em execução', cor: '#60A5FA', bg: 'rgba(96,165,250,0.14)' },
+  concluido: { label: 'Concluído', cor: '#34D399', bg: 'rgba(52,211,153,0.14)' },
+}
+
 export default function PainelLista({ briefings, erro }: { briefings: Briefing[]; erro?: string }) {
   const [busca, setBusca] = useState('')
+  const [filtroStatus, setFiltroStatus] = useState<string>('todos')
 
   const filtrados = useMemo(() => {
     const q = busca.trim().toLowerCase()
-    if (!q) return briefings
-    return briefings.filter((b) =>
-      [b.nome_cliente, b.nome_produto, b.email_cliente]
+    return briefings.filter((b) => {
+      const bateBusca = !q || [b.nome_cliente, b.nome_produto, b.email_cliente]
         .filter(Boolean)
         .some((v) => String(v).toLowerCase().includes(q))
-    )
-  }, [busca, briefings])
+      const bateStatus = filtroStatus === 'todos' || (b.status || 'pendente') === filtroStatus
+      return bateBusca && bateStatus
+    })
+  }, [busca, filtroStatus, briefings])
 
   const stats = useMemo(() => {
     const agora = new Date()
@@ -74,9 +83,22 @@ export default function PainelLista({ briefings, erro }: { briefings: Briefing[]
           />
         </div>
 
+        <div style={S.filtrosRow}>
+          <FiltroChip label="Todos" ativo={filtroStatus === 'todos'} onClick={() => setFiltroStatus('todos')} />
+          {Object.entries(STATUS_CONFIG).map(([chave, cfg]) => (
+            <FiltroChip
+              key={chave}
+              label={cfg.label}
+              cor={cfg.cor}
+              ativo={filtroStatus === chave}
+              onClick={() => setFiltroStatus(chave)}
+            />
+          ))}
+        </div>
+
         {filtrados.length === 0 && (
           <p style={{ color: '#6B6480', textAlign: 'center', padding: '32px 0' }}>
-            {briefings.length === 0 ? 'Nenhum briefing recebido ainda.' : 'Nada encontrado para essa busca.'}
+            {briefings.length === 0 ? 'Nenhum briefing recebido ainda.' : 'Nada encontrado para esse filtro.'}
           </p>
         )}
 
@@ -87,6 +109,23 @@ export default function PainelLista({ briefings, erro }: { briefings: Briefing[]
         </div>
       </div>
     </main>
+  )
+}
+
+function FiltroChip({ label, cor, ativo, onClick }: { label: string; cor?: string; ativo: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        fontSize: '12px', fontWeight: 600, padding: '6px 12px', borderRadius: '999px', cursor: 'pointer',
+        border: ativo ? `1px solid ${cor || '#8B5CF6'}` : '1px solid #2E2147',
+        background: ativo ? (cor ? `${cor}22` : 'rgba(139,92,246,0.15)') : 'transparent',
+        color: ativo ? (cor || '#C4B5FD') : '#9C8FBE',
+      }}
+    >
+      {label}
+    </button>
   )
 }
 
@@ -104,10 +143,40 @@ function StatCard({ icone, label, valor }: { icone: React.ReactNode; label: stri
 
 function CardBriefing({ b }: { b: Briefing }) {
   const [copiado, setCopiado] = useState(false)
+  const [status, setStatus] = useState(b.status || 'pendente')
+  const [observacaoInterna, setObservacaoInterna] = useState(b.observacao_interna || '')
+  const [sitePublicado, setSitePublicado] = useState(b.site_publicado || '')
+  const [salvando, setSalvando] = useState(false)
+  const [salvo, setSalvo] = useState(false)
+
   const iniciais = (b.nome_produto || b.nome_cliente || '?').slice(0, 2).toUpperCase()
+  const cfgStatus = STATUS_CONFIG[status] || STATUS_CONFIG.pendente
+
+  async function salvarGestao() {
+    setSalvando(true)
+    setSalvo(false)
+    try {
+      const res = await fetch('/api/painel/atualizar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: b.id,
+          status,
+          observacao_interna: observacaoInterna,
+          site_publicado: sitePublicado,
+        }),
+      })
+      if (res.ok) {
+        setSalvo(true)
+        setTimeout(() => setSalvo(false), 2000)
+      }
+    } finally {
+      setSalvando(false)
+    }
+  }
 
   async function copiarResumo() {
-    const texto = gerarResumoTexto(b)
+    const texto = gerarResumoTexto(b, status, observacaoInterna, sitePublicado)
     try {
       await navigator.clipboard.writeText(texto)
       setCopiado(true)
@@ -118,13 +187,16 @@ function CardBriefing({ b }: { b: Briefing }) {
   }
 
   return (
-    <details className="edp-card" style={S.card}>
+    <details className="edp-card" style={{ ...S.card, borderLeft: `3px solid ${cfgStatus.cor}` }}>
       <summary className="edp-summary" style={S.summary}>
         <div style={S.avatar}>{iniciais}</div>
 
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={S.summaryTopo}>
             <span style={S.nomeProduto}>{b.nome_produto || '(sem nome de produto)'}</span>
+            <span style={{ ...S.pillStatus, color: cfgStatus.cor, background: cfgStatus.bg }}>
+              {cfgStatus.label}
+            </span>
             {b.preco && <span style={S.pillPreco}>{b.preco}</span>}
           </div>
           <div style={S.summarySub}>
@@ -149,6 +221,59 @@ function CardBriefing({ b }: { b: Briefing }) {
       </summary>
 
       <div style={S.corpo}>
+        <div style={S.gestaoBox}>
+          <h3 style={S.gestaoTitulo}>Gestão interna</h3>
+
+          <div style={S.gestaoLinha}>
+            <span style={S.campoLabel}>Status</span>
+            <div style={S.statusOpcoes}>
+              {Object.entries(STATUS_CONFIG).map(([chave, cfg]) => (
+                <button
+                  key={chave}
+                  type="button"
+                  onClick={() => setStatus(chave)}
+                  style={{
+                    fontSize: '12px', fontWeight: 600, padding: '6px 12px', borderRadius: '8px', cursor: 'pointer',
+                    border: status === chave ? `1px solid ${cfg.cor}` : '1px solid #2E2147',
+                    background: status === chave ? `${cfg.cor}22` : 'transparent',
+                    color: status === chave ? cfg.cor : '#9C8FBE',
+                  }}
+                >
+                  {cfg.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={S.gestaoLinha}>
+            <span style={S.campoLabel}>
+              <Globe size={12} style={{ verticalAlign: '-2px', marginRight: '4px' }} />
+              Site publicado
+            </span>
+            <input
+              value={sitePublicado}
+              onChange={(e) => setSitePublicado(e.target.value)}
+              placeholder="https://..."
+              style={S.gestaoInput}
+            />
+          </div>
+
+          <div style={S.gestaoLinha}>
+            <span style={S.campoLabel}>Observação interna</span>
+            <textarea
+              value={observacaoInterna}
+              onChange={(e) => setObservacaoInterna(e.target.value)}
+              placeholder="Anotações só para a equipe (não visível ao cliente)..."
+              style={S.gestaoTextarea}
+            />
+          </div>
+
+          <button onClick={salvarGestao} disabled={salvando} style={S.btnSalvar} type="button">
+            {salvo ? <Check size={14} /> : <Save size={14} />}
+            {salvando ? 'Salvando...' : salvo ? 'Salvo!' : 'Salvar'}
+          </button>
+        </div>
+
         <button onClick={copiarResumo} style={S.btnCopiar} type="button">
           {copiado ? <Check size={14} /> : <Copy size={14} />}
           {copiado ? 'Copiado!' : 'Copiar resumo'}
@@ -218,10 +343,12 @@ function CardBriefing({ b }: { b: Briefing }) {
   )
 }
 
-function gerarResumoTexto(b: Briefing): string {
+function gerarResumoTexto(b: Briefing, status: string, observacaoInterna: string, sitePublicado: string): string {
   const linhas = [
     `BRIEFING — ${b.nome_produto || b.nome_cliente}`,
     `Recebido em ${new Date(b.created_at).toLocaleString('pt-BR')}`,
+    `Status: ${STATUS_CONFIG[status]?.label || status}`,
+    sitePublicado ? `Site publicado: ${sitePublicado}` : '',
     '',
     '— IDENTIFICAÇÃO —',
     `Nome: ${b.nome_cliente || '-'}`,
@@ -269,8 +396,9 @@ function gerarResumoTexto(b: Briefing): string {
     '— FECHAMENTO —',
     `Order bumps: ${(b.order_bumps || []).join(', ') || 'nenhum'}`,
     `Observação: ${b.observacao_extra || '-'}`,
+    observacaoInterna ? `\n— OBSERVAÇÃO INTERNA —\n${observacaoInterna}` : '',
   ]
-  return linhas.join('\n')
+  return linhas.filter((l) => l !== '').join('\n')
 }
 
 function simNao(v: boolean | null): string {
@@ -327,7 +455,7 @@ const S: Record<string, React.CSSProperties> = {
     fontFamily: "'Inter', -apple-system, sans-serif",
     color: '#F5F2FF',
   },
-  wrapper: { maxWidth: '760px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '28px' },
+  wrapper: { maxWidth: '760px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px' },
   header: { display: 'flex', flexDirection: 'column', gap: '6px' },
   headerTopo: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' },
   badgeLive: {
@@ -356,6 +484,7 @@ const S: Record<string, React.CSSProperties> = {
     flex: 1, background: 'transparent', border: 'none', outline: 'none',
     color: '#F5F2FF', fontSize: '14px', fontFamily: 'inherit',
   },
+  filtrosRow: { display: 'flex', gap: '8px', flexWrap: 'wrap' as const },
   lista: { display: 'flex', flexDirection: 'column', gap: '10px' },
   card: {
     background: '#1B1330', border: '1px solid #2E2147', borderRadius: '14px', overflow: 'hidden',
@@ -369,6 +498,7 @@ const S: Record<string, React.CSSProperties> = {
   },
   summaryTopo: { display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' as const },
   nomeProduto: { fontSize: '15px', fontWeight: 700, fontFamily: "'Space Grotesk', sans-serif" },
+  pillStatus: { fontSize: '10.5px', fontWeight: 700, padding: '3px 9px', borderRadius: '999px' },
   pillPreco: {
     fontSize: '11px', fontWeight: 600, color: '#34D399', background: 'rgba(52,211,153,0.12)',
     padding: '2px 8px', borderRadius: '999px',
@@ -385,6 +515,31 @@ const S: Record<string, React.CSSProperties> = {
   corpo: {
     padding: '4px 18px 20px', display: 'flex', flexDirection: 'column', gap: '4px',
     borderTop: '1px solid #2E2147',
+  },
+  gestaoBox: {
+    marginTop: '16px', padding: '14px', background: 'rgba(124,58,237,0.06)',
+    border: '1px dashed #3D2E5C', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '12px',
+  },
+  gestaoTitulo: {
+    fontSize: '11px', fontWeight: 700, color: '#C4B5FD', margin: 0,
+    textTransform: 'uppercase' as const, letterSpacing: '0.05em',
+  },
+  gestaoLinha: { display: 'flex', flexDirection: 'column', gap: '6px' },
+  statusOpcoes: { display: 'flex', gap: '6px', flexWrap: 'wrap' as const },
+  gestaoInput: {
+    padding: '9px 11px', border: '1px solid #2E2147', background: '#120B1F',
+    color: '#F5F2FF', borderRadius: '7px', fontSize: '13px', fontFamily: 'inherit',
+  },
+  gestaoTextarea: {
+    padding: '9px 11px', border: '1px solid #2E2147', background: '#120B1F',
+    color: '#F5F2FF', borderRadius: '7px', fontSize: '13px', fontFamily: 'inherit',
+    minHeight: '60px', resize: 'vertical' as const,
+  },
+  btnSalvar: {
+    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', alignSelf: 'flex-start',
+    fontSize: '12px', fontWeight: 700, color: '#fff',
+    background: 'linear-gradient(135deg, #7C3AED 0%, #DB2777 100%)',
+    border: 'none', borderRadius: '8px', padding: '8px 16px', cursor: 'pointer',
   },
   btnCopiar: {
     display: 'flex', alignItems: 'center', gap: '6px', alignSelf: 'flex-end', marginTop: '14px',

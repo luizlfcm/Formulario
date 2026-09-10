@@ -52,5 +52,10 @@ create table briefings (
   order_bumps text[],
   observacao_extra text,
 
+  -- Gestão interna (preenchido pela equipe no painel, não pelo cliente)
+  status text default 'pendente',
+  observacao_interna text,
+  site_publicado text,
+
   created_at timestamp with time zone default now()
 );
