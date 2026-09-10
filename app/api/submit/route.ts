@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabase } from '@/lib/supabase'
 import { Resend } from 'resend'
+import { gerarEmailHtml } from './email-template'
 
 export async function POST(req: NextRequest) {
   try {
@@ -66,14 +67,7 @@ export async function POST(req: NextRequest) {
         from: 'noreply@mail.luverisgroup.com.br',
         to: 'luiz.lfcm@gmail.com',
         subject: `Novo briefing: ${body.nome_produto || body.nome_cliente}`,
-        html: `
-          <p><strong>Cliente:</strong> ${body.nome_cliente} (${body.email_cliente})</p>
-          <p><strong>WhatsApp:</strong> ${body.whatsapp_contato || '-'}</p>
-          <p><strong>Produto:</strong> ${body.nome_produto || '-'} — ${body.tipo_produto || '-'}</p>
-          <p><strong>Preço:</strong> ${body.preco || '-'}</p>
-          <p><strong>Order bumps:</strong> ${(body.order_bumps || []).join(', ') || 'nenhum'}</p>
-          <p>Acesse o Supabase para ver o briefing completo.</p>
-        `,
+        html: gerarEmailHtml(body),
       })
     } catch (emailError) {
       console.error('Erro ao enviar notificação:', emailError)
